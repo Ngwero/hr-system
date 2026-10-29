@@ -1,36 +1,30 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Enterprise HRMS
 
-## Getting Started
+Production foundation for a multi-company human resource platform. Phase 1 is the organisation, authentication, permissions, and audit workspace. Later phases attach employees, attendance, payroll, and the rest of the lifecycle to the same database.
 
-First, run the development server:
+## What is real in this phase
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Supabase Auth with sign-in throttling, password reset, and authenticator-app enrolment
+- The first signed-in administrator creates the company. Further people are invited
+- Permission checks in Postgres, not only in the interface
+- Company, branches, locations, divisions, business units, departments, teams, cost centres, jobs, work week, and public holidays
+- Users, system roles, custom roles, and a permission matrix
+- Approval chains stored as data
+- Append-only audit log
+- Staff ID verification that returns only the fields printed on a card
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Payroll tax, leave-day counting, and payroll locking are implemented in the database and covered by `npm run db:validate`. Their screens arrive with the payroll and leave phases. Statutory rates are configuration rows. A locked payroll run keeps the rules it used.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Setup
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Create a Supabase project.
+2. Run every file in `supabase/migrations` in order, using the SQL editor or `supabase db push`.
+3. Copy `.env.example` to `.env.local` and fill in the project URL, anon key, and service role key.
+4. In Supabase Auth, allow email sign-up only until the first administrator exists, then turn public sign-up off. Invites use the service role.
+5. `npm run dev`
 
-## Learn More
+The service role key stays on the server. It is required for invites and sign-in throttling.
 
-To learn more about Next.js, take a look at the following resources:
+## Local schema check
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`npm run db:validate` builds a throwaway Postgres database, applies the migrations, and checks tax calculation, holiday-aware leave days, payroll freeze and reopen, and that an employee role cannot read another person's salary, bank account, or payroll run.
